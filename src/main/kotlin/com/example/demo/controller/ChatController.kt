@@ -29,24 +29,25 @@ class ChatController(
         return if (request.isStreaming) {
             val emitter = ResponseBodyEmitter()
 
-            // 비동기 처리
             thread {
                 try {
-                    val userEmail = authUser.email
-                    val chat = chatService.createStreamChat(
+                    chatService.createStreamChat(
                         CreateChatRequest(
-                            email = userEmail,
+                            email = authUser.email,
                             question = request.question,
                             isStreaming = true,
                             model = request.model
-                        )
+                        ),
+                        emitter  // ✅ emitter 전달
                     )
-
-                    emitter.complete()
                 } catch (e: Exception) {
                     emitter.completeWithError(e)
                 }
             }
+
+            ResponseEntity.ok()
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(emitter)
 
             ResponseEntity.ok()
                 .contentType(MediaType.TEXT_PLAIN)

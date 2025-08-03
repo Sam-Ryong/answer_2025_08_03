@@ -10,7 +10,7 @@ interface ChatService {
 
     fun createChat(request: CreateChatRequest): String
 
-    fun createStreamChat(request: CreateChatRequest): ResponseBodyEmitter
+    fun createStreamChat(request: CreateChatRequest, emitter: ResponseBodyEmitter)
 
     fun getAllChat( email: String,
                     isAdmin: Boolean,

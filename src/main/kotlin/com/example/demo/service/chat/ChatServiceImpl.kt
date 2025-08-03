@@ -51,14 +51,11 @@ class ChatServiceImpl(
         return answer
     }
 
-    override fun createStreamChat(request: ChatService.CreateChatRequest): ResponseBodyEmitter {
-
+    override fun createStreamChat(request: ChatService.CreateChatRequest, emitter: ResponseBodyEmitter) {
         val user = userRepository.findByEmail(request.email)
             ?: throw IllegalArgumentException("해당 이메일의 유저가 존재하지 않습니다.")
 
         val now = LocalDateTime.now()
-
-        val emitter = ResponseBodyEmitter()
 
         val latestThread = threadRepository.findTopByUserOrderByCreatedAtDesc(user)
 
@@ -70,7 +67,6 @@ class ChatServiceImpl(
             latestThread
         }
 
-
         thread {
             try {
                 val chunks = generateStreamingAnswer(request.question, request.model)
@@ -81,23 +77,20 @@ class ChatServiceImpl(
                     answerBuilder.appendLine(chunk)
                 }
 
-                emitter.complete()
-
                 val chat = Chat(
                     thread = thread,
                     question = request.question,
                     answer = answerBuilder.toString()
                 )
-
                 chatRepository.save(chat)
 
+                emitter.complete()
             } catch (e: Exception) {
                 emitter.completeWithError(e)
             }
         }
-
-        return emitter
     }
+
 
 
 
